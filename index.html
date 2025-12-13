@@ -61,6 +61,21 @@
   </div>
 
   <div id="docStatus" class="text-center text-sm text-green-600"></div>
+  
+  <!-- Calorie Tracking AI Bot -->
+  <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
+    <span>🤖 Calorie Tracking AI</span>
+  </button>
+  
+  <!-- Botpress Chatbot Container -->
+  <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
+    <iframe 
+      id="botpressIframe"
+      src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
+      style="width: 100%; height: 100%; border: none;"
+      allow="microphone; camera">
+    </iframe>
+  </div>
 </div>
 
 <!-- ================= FASTING TIMER ================= -->
@@ -191,6 +206,21 @@ docStop.onclick = async () => {
 
   docTimer.textContent = "00:00:00";
   docStatus.textContent = "Saved to Supabase ✅";
+};
+
+/* ===== BOTPRESS CALORIE TRACKING AI ===== */
+// Toggle chatbot visibility
+document.getElementById("toggleChatbot").onclick = () => {
+  const container = document.getElementById("chatbotContainer");
+  const button = document.getElementById("toggleChatbot");
+  
+  if (container.classList.contains("hidden")) {
+    container.classList.remove("hidden");
+    button.innerHTML = '<span>❌ Close AI Chat</span>';
+  } else {
+    container.classList.add("hidden");
+    button.innerHTML = '<span>🤖 Calorie Tracking AI</span>';
+  }
 };
 
 /* ===== SaaS TIMER ===== */
