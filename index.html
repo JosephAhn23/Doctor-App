@@ -38,78 +38,21 @@
 
 <div id="app" class="min-h-screen flex flex-col items-center py-12 gap-12">
 
-<!-- ================= HEALTH APPS (Doctor & Psychologist) ================= -->
-<div class="w-full max-w-4xl flex flex-col md:flex-row gap-6 items-start">
-  
-  <!-- ================= DOCTOR APP ================= -->
-  <div class="w-full md:w-1/2 max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-  <h1 class="text-xl font-bold text-center">Doctor App</h1>
+<!-- ================= AESTHETICS APP ================= -->
+<div class="w-full max-w-md bg-white/70 backdrop-blur border rounded-xl p-6 shadow space-y-3">
+  <h1 class="text-xl font-bold text-center">Aesthetics App</h1>
+  <p class="text-sm text-center text-gray-600">-(NoTraining) Motivation</p>
 
-  <div id="docTimer" class="text-center text-3xl font-mono">00:00:00</div>
+  <input id="benchPress" class="border p-2 rounded w-full" placeholder="Bench Press ×34">
+  <input id="rows" class="border p-2 rounded w-full" placeholder="Rows ×33">
+  <input id="overheadPress" class="border p-2 rounded w-full" placeholder="Overhead Press ×33">
 
-  <div class="flex gap-2">
-    <button id="docStart" class="flex-1 bg-indigo-600 text-white py-2 rounded">START</button>
-    <button id="docStop" class="flex-1 border py-2 rounded">STOP</button>
-  </div>
-
-  <div class="grid grid-cols-2 gap-2">
-    <input id="docCalories" type="number" placeholder="Calories" class="border p-2 rounded">
-    <input id="docProtein" type="number" placeholder="Protein (g)" class="border p-2 rounded">
-  </div>
-
-  <div class="flex justify-between text-sm">
-    <label><input id="docSwim" type="checkbox"> Swim</label>
-    <label><input id="docGym" type="checkbox"> Gym</label>
-    <label><input id="docHome" type="checkbox"> Dumbbells</label>
-  </div>
-
-  <div id="docStatus" class="text-center text-sm text-green-600"></div>
-  
-  <!-- Calorie Tracking AI Bot -->
-  <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
-    <span>🤖 Calorie Tracking AI</span>
+  <button id="calcAesthetics" class="bg-pink-600 text-white py-2 rounded w-full">
+    Calculate & Save
   </button>
-  
-  <!-- Botpress Chatbot Container -->
-  <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
-    <iframe 
-      id="botpressIframe"
-      src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
-      style="width: 100%; height: 100%; border: none;"
-      allow="microphone; camera">
-    </iframe>
-  </div>
-</div>
 
-  <!-- ================= PSYCHOLOGIST APP ================= -->
-  <div class="w-full md:w-1/2 max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-    <h1 class="text-xl font-bold text-center">Psychologist App</h1>
-    
-    <div class="space-y-3">
-      <div>
-        <label class="text-sm text-gray-600">Sleep Quality (0-10)</label>
-        <input id="psychSleep" type="number" min="0" max="10" step="0.1" placeholder="Sleep Quality (0-10)" class="border p-2 rounded w-full">
-      </div>
-      
-      <div>
-        <label class="text-sm text-gray-600">Mental & Emotional Load (0-10)</label>
-        <input id="psychMental" type="number" min="0" max="10" step="0.1" placeholder="Mental & Emotional Load (0-10)" class="border p-2 rounded w-full">
-      </div>
-      
-      <div>
-        <label class="text-sm text-gray-600">Environmental Stress Load (0-10)</label>
-        <input id="psychEnv" type="number" min="0" max="10" step="0.1" placeholder="Environmental Stress (0-10)" class="border p-2 rounded w-full">
-      </div>
-    </div>
-    
-    <button id="calcPsych" class="bg-purple-600 text-white py-2 rounded w-full">
-      Calculate & Save
-    </button>
-    
-    <div id="psychResult" class="text-center text-purple-600"></div>
-    <div id="psychStatus" class="text-center text-sm text-green-600"></div>
-  </div>
-  
+  <div id="aestheticsResult" class="text-center text-pink-600"></div>
+  <div id="aestheticsStatus" class="text-center text-sm text-green-600"></div>
 </div>
 
 <!-- ================= FASTING TIMER ================= -->
@@ -146,21 +89,21 @@
 <div class="w-full max-w-6xl space-y-4">
   <h2 class="text-lg font-bold text-center">Table Editor (2 Most Recent)</h2>
   
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     
-    <!-- Doctor Logs Editor -->
+    <!-- Aesthetics Logs Editor -->
     <div class="bg-white p-4 rounded-xl shadow">
-      <h3 class="text-md font-bold mb-2">Doctor App</h3>
+      <h3 class="text-md font-bold mb-2">Aesthetics App</h3>
       <div class="mb-2 flex gap-2">
-        <button onclick="addRowToTable('doctor_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
+        <button onclick="addRowToTable('aesthetics_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full border-collapse text-xs">
-          <thead id="editorHead_doc" class="bg-gray-100"></thead>
-          <tbody id="editorBody_doc"></tbody>
+          <thead id="editorHead_aesthetics" class="bg-gray-100"></thead>
+          <tbody id="editorBody_aesthetics"></tbody>
         </table>
       </div>
-      <div id="editorStatus_doc" class="mt-2 text-center text-xs"></div>
+      <div id="editorStatus_aesthetics" class="mt-2 text-center text-xs"></div>
     </div>
     
     <!-- SaaS Timer Editor -->
@@ -193,21 +136,6 @@
       <div id="editorStatus_income" class="mt-2 text-center text-xs"></div>
     </div>
     
-    <!-- Psychologist Logs Editor -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h3 class="text-md font-bold mb-2">Psychologist App</h3>
-      <div class="mb-2 flex gap-2">
-        <button onclick="addRowToTable('psychologist_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-xs">
-          <thead id="editorHead_psych" class="bg-gray-100"></thead>
-          <tbody id="editorBody_psych"></tbody>
-        </table>
-      </div>
-      <div id="editorStatus_psych" class="mt-2 text-center text-xs"></div>
-    </div>
-    
   </div>
   
   <div class="text-center">
@@ -224,80 +152,94 @@
 const pad = n => String(n).padStart(2,"0");
 const fmt = s => `${pad(s/3600|0)}:${pad(s%3600/60|0)}:${pad(s%60)}`;
 
-/* ===== DOCTOR APP ===== */
-let dStart = null, dInt = null;
-
-docStart.onclick = () => {
-  if (dInt) return;
-  dStart = Date.now();
-  dInt = setInterval(() => {
-    docTimer.textContent = fmt((Date.now() - dStart) / 1000 | 0);
-  }, 1000);
-};
-
-docStop.onclick = async () => {
-  clearInterval(dInt);
-  dInt = null;
-
-  const hours = ((Date.now() - dStart) / 3600000).toFixed(2);
-  const score =
-    (docGym.checked ? 0.026 : 0) +
-    (docSwim.checked ? 0.025 : 0) +
-    (docHome.checked ? 0.018 : 0);
-
-  await supabase.from("doctor_logs").insert({
-    date: new Date().toISOString().slice(0,10),
-    hours,
-    calories: +docCalories.value || 0,
-    protein: +docProtein.value || 0,
-    score
-  });
-
-  docTimer.textContent = "00:00:00";
-  docStatus.textContent = "Saved to Supabase ✅";
-};
-
-/* ===== BOTPRESS CALORIE TRACKING AI ===== */
-// Toggle chatbot visibility
-document.getElementById("toggleChatbot").onclick = () => {
-  const container = document.getElementById("chatbotContainer");
-  const button = document.getElementById("toggleChatbot");
+/* ===== AESTHETICS APP ===== */
+document.getElementById("calcAesthetics").onclick = async () => {
+  const benchPress = document.getElementById("benchPress");
+  const rows = document.getElementById("rows");
+  const overheadPress = document.getElementById("overheadPress");
+  const aestheticsResult = document.getElementById("aestheticsResult");
+  const aestheticsStatus = document.getElementById("aestheticsStatus");
   
-  if (container.classList.contains("hidden")) {
-    container.classList.remove("hidden");
-    button.innerHTML = '<span>❌ Close AI Chat</span>';
-  } else {
-    container.classList.add("hidden");
-    button.innerHTML = '<span>🤖 Calorie Tracking AI</span>';
+  const bench = +benchPress.value || 0;
+  const rowsVal = +rows.value || 0;
+  const overhead = +overheadPress.value || 0;
+  
+  // Calculate aesthetics score: 34B + 33R + 33O
+  const score = (bench * 34) + (rowsVal * 33) + (overhead * 33);
+  
+  aestheticsResult.textContent = "Score: " + score.toFixed(2);
+  
+  try {
+    const { data, error } = await supabase.from("aesthetics_logs").insert({
+      date: new Date().toISOString().slice(0,10),
+      bench_press: bench,
+      rows: rowsVal,
+      overhead_press: overhead,
+      score
+    });
+    
+    if (error) {
+      aestheticsStatus.textContent = "❌ Error: " + error.message;
+      console.error("Aesthetics save error:", error);
+    } else {
+      aestheticsStatus.textContent = "Saved to Supabase ✅";
+      // Clear inputs after successful save
+      benchPress.value = "";
+      rows.value = "";
+      overheadPress.value = "";
+    }
+  } catch (err) {
+    aestheticsStatus.textContent = "❌ Error: " + err.message;
+    console.error("Aesthetics save error:", err);
   }
 };
 
 /* ===== SaaS TIMER ===== */
 let fStart = null, fInt = null;
 
-fastStart.onclick = () => {
+document.getElementById("fastStart").onclick = () => {
   if (fInt) return;
   fStart = Date.now();
+  const fastTimer = document.getElementById("fastTimer");
   fInt = setInterval(() => {
     fastTimer.textContent = fmt((Date.now() - fStart) / 1000 | 0);
   }, 1000);
 };
 
-fastStop.onclick = async () => {
+document.getElementById("fastStop").onclick = async () => {
   clearInterval(fInt);
   fInt = null;
+  const fastTimer = document.getElementById("fastTimer");
+  const fastStatus = document.getElementById("fastStatus");
 
-  await supabase.from("fasting_logs").insert({
-    date: new Date().toISOString().slice(0,10),
-    seconds: (Date.now() - fStart) / 1000 | 0
-  });
+  try {
+    const { data, error } = await supabase.from("fasting_logs").insert({
+      date: new Date().toISOString().slice(0,10),
+      seconds: (Date.now() - fStart) / 1000 | 0
+    });
+
+    if (error) {
+      fastStatus.textContent = "❌ Error: " + error.message;
+      console.error("Fasting save error:", error);
+    } else {
+      fastStatus.textContent = "Saved to Supabase ✅";
+    }
+  } catch (err) {
+    fastStatus.textContent = "❌ Error: " + err.message;
+    console.error("Fasting save error:", err);
+  }
 
   fastTimer.textContent = "00:00:00";
-  fastStatus.textContent = "Saved to Supabase ✅";
 };
 
 /* ===== INCOME ===== */
-calcIncome.onclick = async () => {
+document.getElementById("calcIncome").onclick = async () => {
+  const saas = document.getElementById("saas");
+  const projects = document.getElementById("projects");
+  const cgpa = document.getElementById("cgpa");
+  const bf = document.getElementById("bf");
+  const incomeResult = document.getElementById("incomeResult");
+  
   const score =
     (+saas.value||0)*10 +
     (+projects.value||0)*6 +
@@ -306,59 +248,53 @@ calcIncome.onclick = async () => {
 
   incomeResult.textContent = "Score: " + score.toFixed(2);
 
-  await supabase.from("income_logs").insert({
-    saas: +saas.value || 0,
-    projects: +projects.value || 0,
-    cgpa: +cgpa.value || 0,
-    bf: +bf.value || 0,
-    score
-  });
+  try {
+    const { data, error } = await supabase.from("income_logs").insert({
+      saas: +saas.value || 0,
+      projects: +projects.value || 0,
+      cgpa: +cgpa.value || 0,
+      bf: +bf.value || 0,
+      score
+    });
+    
+    if (error) {
+      incomeResult.textContent = "❌ Error: " + error.message;
+      console.error("Income save error:", error);
+    } else {
+      incomeResult.textContent = "Score: " + score.toFixed(2) + " - Saved ✅";
+      // Clear inputs after successful save
+      saas.value = "";
+      projects.value = "";
+      cgpa.value = "";
+      bf.value = "";
+    }
+  } catch (err) {
+    incomeResult.textContent = "❌ Error: " + err.message;
+    console.error("Income save error:", err);
+  }
 };
 
-/* ===== PSYCHOLOGIST APP ===== */
-calcPsych.onclick = async () => {
-  const sleep = Math.min(Math.max((+psychSleep.value || 0), 0), 10);
-  const mental = Math.min(Math.max((+psychMental.value || 0), 0), 10);
-  const env = Math.min(Math.max((+psychEnv.value || 0), 0), 10);
-  
-  // Calculate stress score (average of the three metrics, out of 10)
-  const stressScore = ((sleep + mental + env) / 3).toFixed(2);
-  
-  psychResult.textContent = "Stress Score: " + stressScore + " / 10";
-  
-  await supabase.from("psychologist_logs").insert({
-    date: new Date().toISOString().slice(0,10),
-    sleep_quality: sleep,
-    mental_emotional_load: mental,
-    environmental_stress: env,
-    stress_score: parseFloat(stressScore)
-  });
-  
-  psychStatus.textContent = "Saved to Supabase ✅";
-};
 
 
 /* ===== TABLE EDITOR ===== */
 const editorData = {
-  doctor_logs: [],
+  aesthetics_logs: [],
   fasting_logs: [],
-  income_logs: [],
-  psychologist_logs: []
+  income_logs: []
 };
 
 const deletedIds = {
-  doctor_logs: [],
+  aesthetics_logs: [],
   fasting_logs: [],
-  income_logs: [],
-  psychologist_logs: []
+  income_logs: []
 };
 
 const tableSchemas = {
-  doctor_logs: {
-    columns: ["id", "date", "hours", "calories", "protein", "score"],
-    editable: ["date", "hours", "calories", "protein", "score"],
-    headers: ["Date", "Hours", "Calories", "Protein", "Score"],
-    suffix: "_doc"
+  aesthetics_logs: {
+    columns: ["id", "date", "bench_press", "rows", "overhead_press", "score"],
+    editable: ["date", "bench_press", "rows", "overhead_press", "score"],
+    headers: ["Date", "Bench", "Rows", "Overhead", "Score"],
+    suffix: "_aesthetics"
   },
   fasting_logs: {
     columns: ["id", "date", "seconds"],
@@ -371,12 +307,6 @@ const tableSchemas = {
     editable: ["saas", "projects", "cgpa", "bf", "score"],
     headers: ["SaaS", "Projects", "CGPA", "BF%", "Score"],
     suffix: "_income"
-  },
-  psychologist_logs: {
-    columns: ["id", "date", "sleep_quality", "mental_emotional_load", "environmental_stress", "stress_score"],
-    editable: ["date", "sleep_quality", "mental_emotional_load", "environmental_stress", "stress_score"],
-    headers: ["Date", "Sleep", "Mental", "Env Stress", "Score"],
-    suffix: "_psych"
   }
 };
 
@@ -427,13 +357,13 @@ function renderSingleTable(tableName) {
         const value = row[col] ?? "";
         return `<td class="border p-1">
           ${isEditable 
-            ? `<input type="${col === 'date' ? 'date' : ['score', 'hours', 'seconds', 'saas', 'projects', 'cgpa', 'bf', 'sleep_quality', 'mental_emotional_load', 'environmental_stress', 'stress_score'].includes(col) ? 'number' : 'text'}" 
+            ? `<input type="${col === 'date' ? 'date' : ['score', 'seconds', 'saas', 'projects', 'cgpa', 'bf', 'bench_press', 'rows', 'overhead_press'].includes(col) ? 'number' : 'text'}" 
                      value="${value}" 
                      data-col="${col}" 
                      data-idx="${idx}"
                      data-table="${tableName}"
                      class="w-full p-1 border-0 focus:outline-none focus:bg-blue-50 text-xs" 
-                     step="${['score', 'hours', 'cgpa', 'bf', 'sleep_quality', 'mental_emotional_load', 'environmental_stress', 'stress_score'].includes(col) ? '0.1' : '1'}">`
+                     step="${['score', 'cgpa', 'bf', 'bench_press', 'rows', 'overhead_press'].includes(col) ? '0.1' : '1'}">`
             : `<span class="px-1 text-xs">${value}</span>`}
         </td>`;
       }).join("")}
@@ -468,7 +398,7 @@ window.addRowToTable = function(tableName) {
   schema.columns.forEach(col => {
     if (col !== "id") {
       if (col === "date") newRow[col] = new Date().toISOString().slice(0, 10);
-      else newRow[col] = ["score", "hours", "seconds", "saas", "projects", "cgpa", "bf", "sleep_quality", "mental_emotional_load", "environmental_stress", "stress_score"].includes(col) ? 0 : "";
+      else newRow[col] = ["score", "seconds", "saas", "projects", "cgpa", "bf", "bench_press", "rows", "overhead_press"].includes(col) ? 0 : "";
     }
   });
   editorData[tableName].unshift(newRow);
