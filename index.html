@@ -39,61 +39,60 @@
     <button id="clearStorageBtn" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Clear Local Storage</button>
   </div>
   
-  <!-- MAIN CONTENT: Apps on left, Dashboard on right -->
-  <div class="flex gap-8 items-start">
-    <!-- LEFT SIDE: Apps -->
-    <div class="flex-1 flex flex-col items-center gap-12 max-w-2xl">
-    
-    <!-- ================= FASTING TIMER ================= -->
-    <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-      <h1 class="text-xl font-bold text-center">Fasting Timer</h1>
+  <!-- MAIN CONTENT: Apps -->
+  <div class="flex flex-col items-center gap-8 max-w-2xl mx-auto w-full">
+  
+  <!-- ================= FASTING TIMER ================= -->
+  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
+    <h1 class="text-xl font-bold text-center">Fasting Timer</h1>
 
-      <div id="fastTimer" class="text-center text-3xl font-mono">00:00:00</div>
+    <div id="fastTimer" class="text-center text-3xl font-mono">00:00:00</div>
 
-      <div class="flex gap-2">
-        <button id="fastStart" class="flex-1 bg-emerald-600 text-white py-2 rounded">START</button>
-        <button id="fastStop" class="flex-1 border py-2 rounded">STOP</button>
-      </div>
-
-      <div id="fastStatus" class="text-center text-sm text-green-600"></div>
+    <div class="flex gap-2">
+      <button id="fastStart" class="flex-1 bg-emerald-600 text-white py-2 rounded">START</button>
+      <button id="fastStop" class="flex-1 border py-2 rounded">STOP</button>
     </div>
 
-    <!-- ================= CALORIES & PROTEIN TRACKING ================= -->
-    <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-      <div class="grid grid-cols-2 gap-2">
-        <input id="docCalories" type="number" placeholder="Calories" class="border p-2 rounded">
-        <input id="docProtein" type="number" placeholder="Protein (g)" class="border p-2 rounded">
-      </div>
+    <div id="fastStatus" class="text-center text-sm text-green-600"></div>
+  </div>
 
-      <button id="docSave" class="w-full bg-indigo-600 text-white py-2 rounded">Save</button>
-
-      <div id="docStatus" class="text-center text-sm text-green-600"></div>
-      
-      <!-- Calorie Tracking AI Bot -->
-      <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
-        <span>🤖 Calorie Tracking AI</span>
-      </button>
-      
-      <!-- Botpress Chatbot Container -->
-      <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
-        <iframe 
-          id="botpressIframe"
-          src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
-          style="width: 100%; height: 100%; border: none;"
-          allow="microphone; camera">
-        </iframe>
-      </div>
+  <!-- ================= CALORIES & PROTEIN TRACKING ================= -->
+  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4 mt-4">
+    <div class="grid grid-cols-2 gap-2">
+      <input id="docCalories" type="number" placeholder="Calories" class="border p-2 rounded">
+      <input id="docProtein" type="number" placeholder="Protein (g)" class="border p-2 rounded">
     </div>
+
+    <button id="docSave" class="w-full bg-indigo-600 text-white py-2 rounded">Save</button>
+
+    <div id="docStatus" class="text-center text-sm text-green-600"></div>
     
-    </div> <!-- End left side apps -->
+    <!-- Calorie Tracking AI Bot -->
+    <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
+      <span>🤖 Calorie Tracking AI</span>
+    </button>
     
-    <!-- RIGHT SIDE: Dashboard -->
-    <div class="w-96 flex-shrink-0">
-      <div class="bg-white/90 backdrop-blur border rounded-xl p-6 shadow sticky top-4">
-        <h2 class="text-lg font-bold mb-4 text-center">Dashboard</h2>
-        
+    <!-- Botpress Chatbot Container -->
+    <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
+      <iframe 
+        id="botpressIframe"
+        src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
+        style="width: 100%; height: 100%; border: none;"
+        allow="microphone; camera">
+      </iframe>
+    </div>
+  </div>
+  
+  </div> <!-- End apps -->
+  
+  <!-- DASHBOARD BELOW -->
+  <div class="w-full max-w-4xl mx-auto mt-8">
+    <div class="bg-white/90 backdrop-blur border rounded-xl p-6 shadow">
+      <h2 class="text-lg font-bold mb-4 text-center">Dashboard</h2>
+      
+      <div class="flex flex-col gap-6">
         <!-- Fasting Timer Stats -->
-        <div class="mb-6 pb-4 border-b">
+        <div>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">Fasting Timer</h3>
           <div id="dashboardSaaS" class="text-xs space-y-1 mb-2">
             <div class="text-gray-500">Loading...</div>
@@ -114,9 +113,8 @@
           </div>
         </div>
       </div>
-    </div> <!-- End right side dashboard -->
-    
-  </div> <!-- End main content flex row -->
+    </div>
+  </div> <!-- End dashboard -->
   
 </div> <!-- End main flex container -->
 
