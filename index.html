@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Life OS</title>
+  <title>TFR</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -14,202 +14,6 @@
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-  <!-- Supabase -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
-  <!-- Configuration (contains API keys - not in git) -->
-  <script src="config.js"></script>
-
-  <script>
-    const { createClient } = window.supabase;
-    const supabase = createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
-    );
-    
-    // Get current user ID (helper function)
-    function getCurrentUserId() {
-      const user = supabase.auth.getUser();
-      return user.then(({ data: { user } }) => user?.id);
-    }
-    
-    // Check auth state and update UI
-    supabase.auth.onAuthStateChange((event, session) => {
-      updateAuthUI(session);
-    });
-    
-    // Handle email confirmation callback (access_token in URL hash)
-    async function handleAuthCallback() {
-      const hashParams = new URLSearchParams(window.location.hash.substring(1));
-      const accessToken = hashParams.get('access_token');
-      const refreshToken = hashParams.get('refresh_token');
-      const error = hashParams.get('error');
-      const errorDescription = hashParams.get('error_description');
-      
-      // Handle errors
-      if (error) {
-        console.error("Auth error:", error, errorDescription);
-        // Show error message if auth status element exists
-        const status = document.getElementById("authStatus");
-        if (status) {
-          status.textContent = "Error: " + (errorDescription || error);
-          status.className = "text-xs text-center text-red-600";
-        }
-        // Clear the URL hash
-        window.history.replaceState(null, '', window.location.pathname);
-        return;
-      }
-      
-      if (accessToken && refreshToken) {
-        try {
-          // Exchange tokens for session
-          const { data, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          if (sessionError) {
-            console.error("Error setting session:", sessionError);
-            const status = document.getElementById("authStatus");
-            if (status) {
-              status.textContent = "Error confirming email: " + sessionError.message;
-              status.className = "text-xs text-center text-red-600";
-            }
-          } else {
-            console.log("Email confirmed! Session set successfully.");
-            // Show success message
-            const status = document.getElementById("authStatus");
-            if (status) {
-              status.textContent = "Email confirmed! You're signed in.";
-              status.className = "text-xs text-center text-green-600";
-            }
-            // Update UI will be handled by onAuthStateChange
-          }
-          
-          // Clear the URL hash
-          window.history.replaceState(null, '', window.location.pathname + window.location.search);
-        } catch (err) {
-          console.error("Unexpected error handling callback:", err);
-        }
-      }
-    }
-    
-    // Handle auth callback on page load (before initial session check)
-    handleAuthCallback();
-    
-    // Initial auth check
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      updateAuthUI(session);
-    });
-    
-    function updateAuthUI(session) {
-      const authUserInfo = document.getElementById("authUserInfo");
-      const authLoginForm = document.getElementById("authLoginForm");
-      const userEmail = document.getElementById("userEmail");
-      
-      if (!authUserInfo || !authLoginForm || !userEmail) return; // Elements not loaded yet
-      
-      if (session?.user) {
-        authUserInfo.classList.remove("hidden");
-        authLoginForm.classList.add("hidden");
-        userEmail.textContent = session.user.email || "User";
-      } else {
-        authUserInfo.classList.add("hidden");
-        authLoginForm.classList.remove("hidden");
-      }
-    }
-    
-    // Wait for DOM to be ready before attaching event handlers
-    function initAuthHandlers() {
-      const signUpBtn = document.getElementById("signUpBtn");
-      const signInBtn = document.getElementById("signInBtn");
-      const signOutBtn = document.getElementById("signOutBtn");
-      
-      if (!signUpBtn || !signInBtn || !signOutBtn) {
-        // Try again after a short delay if elements aren't ready
-        setTimeout(initAuthHandlers, 100);
-        return;
-      }
-      
-      // Authentication handlers
-      signUpBtn.onclick = async () => {
-        const email = document.getElementById("authEmail").value;
-        const password = document.getElementById("authPassword").value;
-        const status = document.getElementById("authStatus");
-        
-        if (!email || !password) {
-          status.textContent = "Please enter email and password";
-          status.className = "text-xs text-center text-red-600";
-          return;
-        }
-        
-        status.textContent = "Signing up...";
-        status.className = "text-xs text-center text-blue-600";
-        
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password
-        });
-        
-        if (error) {
-          status.textContent = "Error: " + error.message;
-          status.className = "text-xs text-center text-red-600";
-          console.error("Sign up error:", error);
-        } else {
-          if (data.user && !data.user.email_confirmed_at) {
-            status.textContent = "Check your email to confirm signup!";
-            status.className = "text-xs text-center text-green-600";
-          } else {
-            status.textContent = "Signed up successfully!";
-            status.className = "text-xs text-center text-green-600";
-          }
-        }
-      };
-      
-      signInBtn.onclick = async () => {
-        const email = document.getElementById("authEmail").value;
-        const password = document.getElementById("authPassword").value;
-        const status = document.getElementById("authStatus");
-        
-        if (!email || !password) {
-          status.textContent = "Please enter email and password";
-          status.className = "text-xs text-center text-red-600";
-          return;
-        }
-        
-        status.textContent = "Signing in...";
-        status.className = "text-xs text-center text-blue-600";
-        
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          status.textContent = "Error: " + error.message;
-          status.className = "text-xs text-center text-red-600";
-          console.error("Sign in error:", error);
-        } else {
-          status.textContent = "Signed in successfully!";
-          status.className = "text-xs text-center text-green-600";
-          // Clear form
-          document.getElementById("authEmail").value = "";
-          document.getElementById("authPassword").value = "";
-        }
-      };
-      
-      signOutBtn.onclick = async () => {
-        await supabase.auth.signOut();
-      };
-    }
-    
-    // Initialize auth handlers when DOM is ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initAuthHandlers);
-    } else {
-      initAuthHandlers();
-    }
-  </script>
 
   <style>
     body { margin: 0; background: #f8fafc; }
@@ -222,282 +26,192 @@
 
 <canvas id="bg"></canvas>
 
-<div id="app" class="min-h-screen flex py-12 gap-8 px-4">
+<div id="app" class="min-h-screen flex flex-col py-12 gap-8 px-4">
   
-  <!-- AUTHENTICATION SECTION -->
-  <div id="authSection" class="fixed top-4 right-4 z-50 bg-white p-4 rounded-lg shadow-lg">
-    <div id="authUserInfo" class="hidden mb-2">
-      <div class="text-sm text-gray-600">Signed in as:</div>
-      <div id="userEmail" class="font-semibold text-sm mb-2"></div>
-      <button id="signOutBtn" class="w-full bg-red-500 text-white px-4 py-1 rounded text-sm">Sign Out</button>
-    </div>
-    <div id="authLoginForm" class="space-y-2">
-      <input id="authEmail" type="email" placeholder="Email" class="border p-2 rounded text-sm w-full">
-      <input id="authPassword" type="password" placeholder="Password" class="border p-2 rounded text-sm w-full">
+  <!-- TITLE AND IMAGE -->
+  <div class="text-center mb-8">
+    <h1 class="text-6xl font-bold mb-4">TFR</h1>
+    <img id="topImage" src="TFR.png" alt="Obesity Ranking Table" class="mx-auto max-w-2xl rounded-lg shadow-lg">
+  </div>
+  
+  <!-- CLEAR STORAGE BUTTON -->
+  <div class="text-center mb-4">
+    <button id="clearStorageBtn" class="bg-red-600 text-white px-6 py-2 rounded hover:bg-red-700">Clear Local Storage</button>
+  </div>
+  
+  <!-- MAIN CONTENT: Apps on left, Dashboard on right -->
+  <div class="flex gap-8 items-start">
+    <!-- LEFT SIDE: Apps -->
+    <div class="flex-1 flex flex-col items-center gap-12 max-w-2xl">
+    
+    <!-- ================= FASTING TIMER ================= -->
+    <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
+      <h1 class="text-xl font-bold text-center">Fasting Timer</h1>
+
+      <div id="fastTimer" class="text-center text-3xl font-mono">00:00:00</div>
+
       <div class="flex gap-2">
-        <button id="signInBtn" class="flex-1 bg-indigo-600 text-white px-4 py-1 rounded text-sm">Sign In</button>
-        <button id="signUpBtn" class="flex-1 bg-green-600 text-white px-4 py-1 rounded text-sm">Sign Up</button>
+        <button id="fastStart" class="flex-1 bg-emerald-600 text-white py-2 rounded">START</button>
+        <button id="fastStop" class="flex-1 border py-2 rounded">STOP</button>
       </div>
-      <div id="authStatus" class="text-xs text-center"></div>
+
+      <div id="fastStatus" class="text-center text-sm text-green-600"></div>
     </div>
-  </div>
-  
-  <!-- LEFT SIDE: Apps -->
-  <div class="flex-1 flex flex-col items-center gap-12 max-w-2xl">
-  
-<!-- ================= FASTING TIMER ================= -->
-<div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-  <h1 class="text-xl font-bold text-center">Exercise Timer</h1>
 
-  <div id="fastTimer" class="text-center text-3xl font-mono">00:00:00</div>
-
-  <div class="flex gap-2">
-    <button id="fastStart" class="flex-1 bg-emerald-600 text-white py-2 rounded">START</button>
-    <button id="fastStop" class="flex-1 border py-2 rounded">STOP</button>
-  </div>
-
-  <div id="fastStatus" class="text-center text-sm text-green-600"></div>
-</div>
-
-<!-- ================= $ STRESS ================= -->
-<div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-  <h1 class="text-xl font-bold text-center">$ Stress</h1>
-
-  <div class="grid grid-cols-2 gap-2 text-sm">
-    <label><input id="stressBasketball" type="checkbox"> Rec Basketball</label>
-    <label><input id="stressTreadmill" type="checkbox"> Treadmill Running</label>
-  </div>
-
-  <button id="stressSave" class="w-full bg-indigo-600 text-white py-2 rounded">Save</button>
-
-  <div id="stressStatus" class="text-center text-sm text-green-600"></div>
-</div>
-
-<!-- ================= BF% APP ================= -->
-<div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-  <h1 class="text-xl font-bold text-center">BF% App</h1>
-
-  <div class="grid grid-cols-2 gap-2">
-    <input id="docCalories" type="number" placeholder="Calories" class="border p-2 rounded">
-    <input id="docProtein" type="number" placeholder="Protein (g)" class="border p-2 rounded">
-  </div>
-
-  <div class="grid grid-cols-2 gap-2 text-sm">
-    <label><input id="docGym" type="checkbox"> Gym</label>
-    <label><input id="docCalTrack" type="checkbox"> Cal track</label>
-    <label><input id="docProteinOnly" type="checkbox"> Ate protein only</label>
-    <label><input id="docHomeDumbbell" type="checkbox"> Home dumbbell</label>
-  </div>
-
-  <button id="docSave" class="w-full bg-indigo-600 text-white py-2 rounded">Save</button>
-
-  <div id="docStatus" class="text-center text-sm text-green-600"></div>
-  
-  <!-- Calorie Tracking AI Bot -->
-  <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
-    <span>🤖 Calorie Tracking AI</span>
-  </button>
-  
-  <!-- Botpress Chatbot Container -->
-  <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
-    <iframe 
-      id="botpressIframe"
-      src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
-      style="width: 100%; height: 100%; border: none;"
-      allow="microphone; camera">
-    </iframe>
-  </div>
-</div>
-  
-  </div> <!-- End left side apps -->
-  
-  <!-- RIGHT SIDE: Dashboard -->
-  <div class="w-96 flex-shrink-0 space-y-4">
-    <div class="bg-white/90 backdrop-blur border rounded-xl p-6 shadow sticky top-4">
-      <h2 class="text-lg font-bold mb-4 text-center">Dashboard</h2>
-      
-      <!-- Life OS Timer Stats -->
-      <div class="mb-6 pb-4 border-b">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">Exercise Timer</h3>
-        <div id="dashboardSaaS" class="text-xs space-y-1 mb-2">
-          <div class="text-gray-500">Loading...</div>
-        </div>
-        <div style="height: 150px; position: relative;">
-          <canvas id="chartSaaS"></canvas>
-        </div>
+    <!-- ================= CALORIES & PROTEIN TRACKING ================= -->
+    <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
+      <div class="grid grid-cols-2 gap-2">
+        <input id="docCalories" type="number" placeholder="Calories" class="border p-2 rounded">
+        <input id="docProtein" type="number" placeholder="Protein (g)" class="border p-2 rounded">
       </div>
+
+      <button id="docSave" class="w-full bg-indigo-600 text-white py-2 rounded">Save</button>
+
+      <div id="docStatus" class="text-center text-sm text-green-600"></div>
       
-      <!-- $ Stress Stats -->
-      <div class="mb-6 pb-4 border-b">
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">$ Stress</h3>
-        <div id="dashboardStress" class="text-xs space-y-1 mb-2">
-          <div class="text-gray-500">Loading...</div>
-        </div>
-        <div style="height: 150px; position: relative;">
-          <canvas id="chartStress"></canvas>
-        </div>
-      </div>
+      <!-- Calorie Tracking AI Bot -->
+      <button id="toggleChatbot" class="w-full bg-purple-600 text-white py-2 rounded hover:bg-purple-700 flex items-center justify-center gap-2">
+        <span>🤖 Calorie Tracking AI</span>
+      </button>
       
-      <!-- BF% App Stats -->
-      <div>
-        <h3 class="text-sm font-semibold text-gray-700 mb-2">BF% App</h3>
-        <div id="dashboardBF" class="text-xs space-y-1 mb-2">
-          <div class="text-gray-500">Loading...</div>
-        </div>
-        <div style="height: 150px; position: relative;">
-          <canvas id="chartBF"></canvas>
-        </div>
+      <!-- Botpress Chatbot Container -->
+      <div id="chatbotContainer" class="hidden mt-4 border rounded-lg overflow-hidden" style="height: 500px;">
+        <iframe 
+          id="botpressIframe"
+          src="https://cdn.botpress.cloud/webchat/v3.5/shareable.html?configUrl=https://files.bpcontent.cloud/2025/12/13/14/20251213144310-3T2R5ADA.json"
+          style="width: 100%; height: 100%; border: none;"
+          allow="microphone; camera">
+        </iframe>
       </div>
     </div>
-  </div> <!-- End right side dashboard -->
+    
+    </div> <!-- End left side apps -->
+    
+    <!-- RIGHT SIDE: Dashboard -->
+    <div class="w-96 flex-shrink-0">
+      <div class="bg-white/90 backdrop-blur border rounded-xl p-6 shadow sticky top-4">
+        <h2 class="text-lg font-bold mb-4 text-center">Dashboard</h2>
+        
+        <!-- Fasting Timer Stats -->
+        <div class="mb-6 pb-4 border-b">
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Fasting Timer</h3>
+          <div id="dashboardSaaS" class="text-xs space-y-1 mb-2">
+            <div class="text-gray-500">Loading...</div>
+          </div>
+          <div style="height: 150px; position: relative;">
+            <canvas id="chartSaaS"></canvas>
+          </div>
+        </div>
+        
+        <!-- Calories & Protein Stats -->
+        <div>
+          <h3 class="text-sm font-semibold text-gray-700 mb-2">Calories & Protein</h3>
+          <div id="dashboardBF" class="text-xs space-y-1 mb-2">
+            <div class="text-gray-500">Loading...</div>
+          </div>
+          <div style="height: 150px; position: relative;">
+            <canvas id="chartBF"></canvas>
+          </div>
+        </div>
+      </div>
+    </div> <!-- End right side dashboard -->
+    
+  </div> <!-- End main content flex row -->
   
 </div> <!-- End main flex container -->
 
-<!-- ================= TABLE EDITOR ================= -->
-<div class="w-full max-w-6xl mx-auto space-y-4 px-4">
-<div class="w-full max-w-6xl space-y-4">
-  <h2 class="text-lg font-bold text-center">Table Editor (2 Most Recent)</h2>
-  
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-    
-    <!-- Doctor Logs Editor -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h3 class="text-md font-bold mb-2">BF% App</h3>
-      <div class="mb-2 flex gap-2">
-        <button onclick="addRowToTable('doctor_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-xs">
-          <thead id="editorHead_doc" class="bg-gray-100"></thead>
-          <tbody id="editorBody_doc"></tbody>
-        </table>
-      </div>
-      <div id="editorStatus_doc" class="mt-2 text-center text-xs"></div>
-    </div>
-    
-    <!-- Life OS Timer Editor -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h3 class="text-md font-bold mb-2">Exercise Timer</h3>
-      <div class="mb-2 flex gap-2">
-        <button onclick="addRowToTable('saas_timer_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-xs">
-          <thead id="editorHead_fast" class="bg-gray-100"></thead>
-          <tbody id="editorBody_fast"></tbody>
-        </table>
-      </div>
-      <div id="editorStatus_fast" class="mt-2 text-center text-xs"></div>
-    </div>
-    
-    <!-- $ Stress Editor -->
-    <div class="bg-white p-4 rounded-xl shadow">
-      <h3 class="text-md font-bold mb-2">$ Stress</h3>
-      <div class="mb-2 flex gap-2">
-        <button onclick="addRowToTable('stress_logs')" class="flex-1 bg-green-600 text-white px-2 py-1 rounded text-xs">+ Add</button>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full border-collapse text-xs">
-          <thead id="editorHead_stress" class="bg-gray-100"></thead>
-          <tbody id="editorBody_stress"></tbody>
-        </table>
-      </div>
-      <div id="editorStatus_stress" class="mt-2 text-center text-xs"></div>
-    </div>
-    
-  </div>
-  
-  <div class="text-center">
-    <button id="saveAllTablesBtn" class="bg-indigo-600 text-white px-6 py-2 rounded">💾 Save All Edits to Supabase</button>
-    <div id="editorStatus" class="mt-2 text-center text-sm text-gray-600">Note: Edits are NOT auto-saved. Click button to save changes.</div>
-  </div>
-</div>
-
-
-</div>
 
 <script>
 /* ===== HELPERS ===== */
 const pad = n => String(n).padStart(2,"0");
 const fmt = s => `${pad(s/3600|0)}:${pad(s%3600/60|0)}:${pad(s%60)}`;
 
+/* ===== LOCALSTORAGE UTILITIES ===== */
+const STORAGE_KEYS = {
+  doctor_logs: 'tfr_doctor_logs',
+  saas_timer_logs: 'tfr_saas_timer_logs'
+};
+
+// Load data from localStorage
+function loadFromStorage(key) {
+  try {
+    const data = localStorage.getItem(key);
+    return data ? JSON.parse(data) : [];
+  } catch (e) {
+    console.error(`Error loading ${key}:`, e);
+    return [];
+  }
+}
+
+// Save data to localStorage
+function saveToStorage(key, data) {
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+    return true;
+  } catch (e) {
+    console.error(`Error saving ${key}:`, e);
+    return false;
+  }
+}
+
+// Add entry to storage
+function addToStorage(key, entry) {
+  const data = loadFromStorage(key);
+  entry.id = entry.id || Date.now(); // Use timestamp as ID
+  entry.created_at = entry.created_at || new Date().toISOString();
+  data.unshift(entry); // Add to beginning
+  saveToStorage(key, data);
+  return entry;
+}
+
+// Update entry in storage
+function updateInStorage(key, id, updates) {
+  const data = loadFromStorage(key);
+  const index = data.findIndex(item => item.id === id);
+  if (index !== -1) {
+    data[index] = { ...data[index], ...updates };
+    saveToStorage(key, data);
+    return true;
+  }
+  return false;
+}
+
+// Delete entry from storage
+function deleteFromStorage(key, id) {
+  const data = loadFromStorage(key);
+  const filtered = data.filter(item => item.id !== id);
+  saveToStorage(key, filtered);
+  return filtered.length !== data.length;
+}
+
 /* ===== BF% APP ===== */
 document.getElementById("docSave").onclick = async () => {
   const docStatus = document.getElementById("docStatus");
   const docCalories = document.getElementById("docCalories");
   const docProtein = document.getElementById("docProtein");
-  const docGym = document.getElementById("docGym");
-  const docCalTrack = document.getElementById("docCalTrack");
-  const docProteinOnly = document.getElementById("docProteinOnly");
-  const docHomeDumbbell = document.getElementById("docHomeDumbbell");
-
-  // Calculate score from: Gym, Cal track, Ate protein only, Home dumbbell
-  const gymScore = docGym.checked ? 0.026 : 0;
-  const calTrackScore = docCalTrack.checked ? 0.025 : 0;
-  const proteinOnlyScore = docProteinOnly.checked ? 0.020 : 0;
-  const homeDumbbellScore = docHomeDumbbell.checked ? 0.018 : 0;
-  const score = gymScore + calTrackScore + proteinOnlyScore + homeDumbbellScore;
-  
-  // Log for debugging
-  console.log("Score calculation:", {
-    gym: docGym.checked,
-    calTrack: docCalTrack.checked,
-    proteinOnly: docProteinOnly.checked,
-    homeDumbbell: docHomeDumbbell.checked,
-    gymScore,
-    calTrackScore,
-    proteinOnlyScore,
-    homeDumbbellScore,
-    totalScore: score
-  });
-
-  // Display score breakdown
-  const scoreBreakdown = [];
-  if (docGym.checked) scoreBreakdown.push("Gym: 0.026");
-  if (docCalTrack.checked) scoreBreakdown.push("Cal track: 0.025");
-  if (docProteinOnly.checked) scoreBreakdown.push("Protein only: 0.020");
-  if (docHomeDumbbell.checked) scoreBreakdown.push("Home dumbbell: 0.018");
-  const scoreText = scoreBreakdown.length > 0 
-    ? `Score: ${score.toFixed(3)} (${scoreBreakdown.join(" + ")})`
-    : `Score: ${score.toFixed(3)}`;
-
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      docStatus.textContent = "❌ Please sign in first";
-      return;
-    }
-    
-    const { data, error } = await supabase.from("doctor_logs").insert({
-      user_id: user.id,
+    const entry = {
       date: new Date().toISOString().slice(0,10),
       hours: 0,
       calories: +docCalories.value || 0,
       protein: +docProtein.value || 0,
-      gym: docGym.checked,
-      cal_track: docCalTrack.checked,
-      protein_only: docProteinOnly.checked,
-      home_dumbbell: docHomeDumbbell.checked,
-      score
-    });
-
-    if (error) {
-      docStatus.textContent = "❌ Error: " + error.message;
-      console.error("BF% App save error:", error);
-    } else {
-      docStatus.textContent = scoreText + " - Saved to Supabase ✅";
-      // Clear inputs after successful save
-      docCalories.value = "";
-      docProtein.value = "";
-      docGym.checked = false;
-      docCalTrack.checked = false;
-      docProteinOnly.checked = false;
-      docHomeDumbbell.checked = false;
-      loadDashboard(); // Refresh dashboard
-    }
+      gym: false,
+      cal_track: false,
+      protein_only: false,
+      home_dumbbell: false,
+      score: 0
+    };
+    
+    addToStorage(STORAGE_KEYS.doctor_logs, entry);
+    docStatus.textContent = "Saved ✅";
+    
+    // Clear inputs after successful save
+    docCalories.value = "";
+    docProtein.value = "";
+    loadDashboard(); // Refresh dashboard
   } catch (err) {
     docStatus.textContent = "❌ Error: " + err.message;
-    console.error("BF% App save error:", err);
+    console.error("Calories & Protein save error:", err);
   }
 };
 
@@ -516,7 +230,7 @@ document.getElementById("toggleChatbot").onclick = () => {
   }
 };
 
-/* ===== LIFE OS TIMER ===== */
+/* ===== FASTING TIMER ===== */
 let fStart = null, fInt = null;
 
 document.getElementById("fastStart").onclick = () => {
@@ -544,294 +258,43 @@ document.getElementById("fastStop").onclick = async () => {
   fStart = null; // Reset after getting the value
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      fastStatus.textContent = "❌ Please sign in first";
-      return;
-    }
-    
-    const { data, error } = await supabase.from("saas_timer_logs").insert({
-      user_id: user.id,
+    const entry = {
       date: new Date().toISOString().slice(0,10),
       seconds: seconds
-    });
-
-    if (error) {
-      fastStatus.textContent = "❌ Error: " + error.message;
-      console.error("Life OS Timer save error:", error);
-    } else {
-      fastStatus.textContent = `Saved ${seconds}s to Supabase ✅`;
-      loadDashboard(); // Refresh dashboard
-    }
+    };
+    
+    addToStorage(STORAGE_KEYS.saas_timer_logs, entry);
+    fastStatus.textContent = `Saved ${seconds}s ✅`;
+    loadDashboard(); // Refresh dashboard
   } catch (err) {
     fastStatus.textContent = "❌ Error: " + err.message;
-    console.error("Life OS Timer save error:", err);
+    console.error("Fasting Timer save error:", err);
   }
 
   fastTimer.textContent = "00:00:00";
 };
 
-/* ===== $ STRESS ===== */
-document.getElementById("stressSave").onclick = async () => {
-  const stressStatus = document.getElementById("stressStatus");
-  const stressBasketball = document.getElementById("stressBasketball");
-  const stressTreadmill = document.getElementById("stressTreadmill");
-
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      stressStatus.textContent = "❌ Please sign in first";
-      return;
-    }
-    
-    const { data, error } = await supabase.from("stress_logs").insert({
-      user_id: user.id,
-      date: new Date().toISOString().slice(0,10),
-      rec_basketball: stressBasketball.checked,
-      treadmill_running: stressTreadmill.checked
-    });
-
-    if (error) {
-      stressStatus.textContent = "❌ Error: " + error.message;
-      console.error("$ Stress save error:", error);
-    } else {
-      const activities = [];
-      if (stressBasketball.checked) activities.push("Rec Basketball");
-      if (stressTreadmill.checked) activities.push("Treadmill Running");
-      stressStatus.textContent = activities.length > 0 
-        ? activities.join(" + ") + " - Saved ✅"
-        : "Saved ✅";
-      // Clear checkboxes after successful save
-      stressBasketball.checked = false;
-      stressTreadmill.checked = false;
-      loadDashboard(); // Refresh dashboard
-    }
-  } catch (err) {
-    stressStatus.textContent = "❌ Error: " + err.message;
-    console.error("$ Stress save error:", err);
-  }
-};
-
-
-
-/* ===== TABLE EDITOR ===== */
-const editorData = {
-  doctor_logs: [],
-  saas_timer_logs: [],
-  stress_logs: []
-};
-
-const deletedIds = {
-  doctor_logs: [],
-  saas_timer_logs: [],
-  stress_logs: []
-};
-
-const tableSchemas = {
-  doctor_logs: {
-    columns: ["id", "date", "hours", "calories", "protein", "gym", "cal_track", "protein_only", "home_dumbbell", "score"],
-    editable: ["date", "hours", "calories", "protein", "gym", "cal_track", "protein_only", "home_dumbbell", "score"],
-    headers: ["Date", "Hours", "Calories", "Protein", "Gym", "Cal Track", "Protein Only", "Home Dumbbell", "Score"],
-    suffix: "_doc"
-  },
-  saas_timer_logs: {
-    columns: ["id", "date", "seconds"],
-    editable: ["date", "seconds"],
-    headers: ["Date", "Seconds"],
-    suffix: "_fast"
-  },
-  stress_logs: {
-    columns: ["id", "date", "rec_basketball", "treadmill_running"],
-    editable: ["date", "rec_basketball", "treadmill_running"],
-    headers: ["Date", "Rec Basketball", "Treadmill Running"],
-    suffix: "_stress"
-  }
-};
-
-async function loadTableEditor() {
-  for (const tableName of Object.keys(tableSchemas)) {
-    await loadSingleTable(tableName);
-  }
-}
-
-async function loadSingleTable(tableName) {
-  const { data, error } = await supabase
-    .from(tableName)
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(2);
-  
-  if (error) {
-    const statusEl = document.getElementById(`editorStatus${tableSchemas[tableName].suffix}`);
-    if (statusEl) {
-      statusEl.textContent = "❌ Error: " + error.message;
-      statusEl.className = "mt-2 text-center text-xs text-red-600";
-    }
-    console.error(`Error loading ${tableName}:`, error);
-    // Still render empty table so user can add rows
-    editorData[tableName] = [];
-    deletedIds[tableName] = [];
-    renderSingleTable(tableName);
-    return;
-  }
-  
-  editorData[tableName] = data || [];
-  deletedIds[tableName] = [];
-  const statusEl = document.getElementById(`editorStatus${tableSchemas[tableName].suffix}`);
-  if (statusEl) statusEl.textContent = "";
-  renderSingleTable(tableName);
-}
-
-function renderSingleTable(tableName) {
-  const schema = tableSchemas[tableName];
-  const suffix = schema.suffix;
-  const head = document.getElementById(`editorHead${suffix}`);
-  const body = document.getElementById(`editorBody${suffix}`);
-  const data = editorData[tableName];
-  
-  // Render headers
-  head.innerHTML = `
-    <tr>
-      ${schema.headers.map(h => `<th class="border p-1 text-left text-xs">${h}</th>`).join("")}
-      <th class="border p-1 text-left text-xs">Del</th>
-    </tr>
-  `;
-  
-  // Render rows (max 2)
-  body.innerHTML = data.slice(0, 2).map((row, idx) => `
-    <tr class="hover:bg-gray-50" data-idx="${idx}">
-      ${schema.columns.filter(col => col !== "id").map(col => {
-        const isEditable = schema.editable.includes(col);
-        const isBoolean = ['gym', 'cal_track', 'protein_only', 'home_dumbbell', 'rec_basketball', 'treadmill_running'].includes(col);
-        const value = row[col] ?? "";
-        return `<td class="border p-1">
-          ${isEditable 
-            ? isBoolean
-              ? `<input type="checkbox" 
-                       ${value ? 'checked' : ''} 
-                       data-col="${col}" 
-                       data-idx="${idx}"
-                       data-table="${tableName}"
-                       class="focus:outline-none">`
-              : `<input type="${col === 'date' ? 'date' : ['score', 'hours', 'seconds', 'saas', 'projects', 'cgpa', 'bf', 'calories', 'protein'].includes(col) ? 'number' : 'text'}" 
-                       value="${value}" 
-                       data-col="${col}" 
-                       data-idx="${idx}"
-                       data-table="${tableName}"
-                       class="w-full p-1 border-0 focus:outline-none focus:bg-blue-50 text-xs" 
-                       step="${['score', 'hours', 'cgpa', 'bf'].includes(col) ? '0.1' : '1'}">`
-            : `<span class="px-1 text-xs">${isBoolean ? (value ? '✓' : '✗') : value}</span>`}
-        </td>`;
-      }).join("")}
-      <td class="border p-1">
-        <button onclick="deleteRow('${tableName}', ${idx})" class="text-red-600 hover:bg-red-50 px-1 py-0.5 rounded text-xs">×</button>
-      </td>
-    </tr>
-  `).join("");
-  
-  // Add input listeners
-  body.querySelectorAll("input").forEach(input => {
-    input.addEventListener("change", (e) => {
-      const idx = parseInt(e.target.dataset.idx);
-      const col = e.target.dataset.col;
-      const table = e.target.dataset.table;
-      let value;
-      if (e.target.type === "checkbox") {
-        value = e.target.checked;
-      } else if (e.target.type === "number") {
-        value = parseFloat(e.target.value) || 0;
-      } else {
-        value = e.target.value;
-      }
-      editorData[table][idx][col] = value;
-    });
-  });
-}
-
-window.deleteRow = function(tableName, idx) {
-  const row = editorData[tableName][idx];
-  if (row && row.id) deletedIds[tableName].push(row.id);
-  editorData[tableName].splice(idx, 1);
-  renderSingleTable(tableName);
-};
-
-window.addRowToTable = function(tableName) {
-  const schema = tableSchemas[tableName];
-  const newRow = { id: null };
-  schema.columns.forEach(col => {
-    if (col !== "id") {
-      if (col === "date") newRow[col] = new Date().toISOString().slice(0, 10);
-      else if (col === "user_id") {
-        // Will be set from current user when saving
-        newRow[col] = null;
-      }
-      else if (['gym', 'cal_track', 'protein_only', 'home_dumbbell', 'rec_basketball', 'treadmill_running'].includes(col)) newRow[col] = false;
-      else newRow[col] = ["score", "hours", "seconds", "saas", "projects", "cgpa", "bf", "calories", "protein"].includes(col) ? 0 : "";
-    }
-  });
-  editorData[tableName].unshift(newRow);
-  // Keep only 2 rows
-  if (editorData[tableName].length > 2) {
-    editorData[tableName] = editorData[tableName].slice(0, 2);
-  }
-  renderSingleTable(tableName);
-};
-
-document.getElementById("saveAllTablesBtn").onclick = async () => {
-  const statusEl = document.getElementById("editorStatus");
-  statusEl.textContent = "Saving all tables...";
-  
-  try {
-    // Save each table
-    for (const tableName of Object.keys(tableSchemas)) {
-      // Delete removed rows (only user's own rows)
-      for (const id of deletedIds[tableName]) {
-        await supabase.from(tableName).delete().eq("id", id).eq("user_id", user.id);
-      }
-      
-      // Get current user
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        statusEl.textContent = "❌ Please sign in first";
-        return;
-      }
-      
-      // Update/insert rows
-      for (const row of editorData[tableName]) {
-        const { id, ...data } = row;
-        // Always include user_id for new rows
-        if (!id) {
-          data.user_id = user.id;
-        }
-        if (id) {
-          // Update existing
-          await supabase.from(tableName).update(data).eq("id", id).eq("user_id", user.id);
-        } else {
-          // Insert new
-          await supabase.from(tableName).insert(data);
-        }
-      }
-    }
-    
-    statusEl.textContent = "✅ All tables saved to Supabase!";
-    setTimeout(() => statusEl.textContent = "", 3000);
-    loadTableEditor(); // Reload the editor with fresh data
-    loadDashboard(); // Refresh dashboard
-  } catch (error) {
-    statusEl.textContent = "❌ Error: " + error.message;
+/* ===== CLEAR LOCAL STORAGE ===== */
+document.getElementById("clearStorageBtn").onclick = () => {
+  if (confirm("Are you sure you want to clear all local storage? This will delete all your saved data!")) {
+    localStorage.removeItem(STORAGE_KEYS.doctor_logs);
+    localStorage.removeItem(STORAGE_KEYS.saas_timer_logs);
+    alert("Local storage cleared! Refreshing page...");
+    loadDashboard(); // Refresh dashboard to show empty state
   }
 };
 
 /* ===== DASHBOARD ===== */
-let chartSaaS = null, chartStress = null, chartBF = null;
+let chartSaaS = null, chartBF = null;
 
-async function loadDashboard() {
-  // Load Life OS Timer data (last 14 days)
-  const { data: saasData } = await supabase
-    .from("saas_timer_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(14);
+function loadDashboard() {
+  // Load Fasting Timer data (last 14 days)
+  const allData = loadFromStorage(STORAGE_KEYS.saas_timer_logs);
+  const saasData = [...allData].sort((a, b) => {
+    const dateA = new Date(a.created_at || 0);
+    const dateB = new Date(b.created_at || 0);
+    return dateB - dateA;
+  }).slice(0, 14);
   
   const saasEl = document.getElementById("dashboardSaaS");
   if (saasData && saasData.length > 0) {
@@ -873,76 +336,20 @@ async function loadDashboard() {
     saasEl.innerHTML = '<div class="text-gray-400">No data yet</div>';
   }
   
-  // Load $ Stress data (last 14 days)
-  const { data: stressData } = await supabase
-    .from("stress_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(14);
-  
-  const stressEl = document.getElementById("dashboardStress");
-  if (stressData && stressData.length > 0) {
-    const latest = stressData[0];
-    const activities = [];
-    if (latest.rec_basketball) activities.push("Basketball");
-    if (latest.treadmill_running) activities.push("Treadmill");
-    stressEl.innerHTML = `
-      <div class="text-gray-600">Latest: ${latest.date}</div>
-      <div class="font-semibold text-indigo-600">${activities.length > 0 ? activities.join(" + ") : "None"}</div>
-      <div class="text-gray-500">${latest.rec_basketball ? "✓" : "✗"} Basketball | ${latest.treadmill_running ? "✓" : "✗"} Treadmill</div>
-    `;
-    
-    // Create/update chart (showing count of activities per day)
-    const ctx = document.getElementById("chartStress").getContext("2d");
-    const sorted = [...stressData].reverse();
-    if (chartStress) chartStress.destroy();
-    chartStress = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: sorted.map(d => new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })),
-        datasets: [{
-          label: "Activities",
-          data: sorted.map(d => (d.rec_basketball ? 1 : 0) + (d.treadmill_running ? 1 : 0)),
-          borderColor: "rgb(99, 102, 241)",
-          backgroundColor: "rgba(99, 102, 241, 0.1)",
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { font: { size: 9 }, stepSize: 1 } },
-          x: { ticks: { font: { size: 8 }, maxRotation: 45 } }
-        }
-      }
-    });
-  } else {
-    stressEl.innerHTML = '<div class="text-gray-400">No data yet</div>';
-  }
-  
-  // Load BF% App data (last 14 days)
-  const { data: bfData } = await supabase
-    .from("doctor_logs")
-    .select("*")
-    .order("created_at", { ascending: false })
-    .limit(14);
+  // Load Calories & Protein data (last 14 days)
+  const allBfData = loadFromStorage(STORAGE_KEYS.doctor_logs);
+  const bfData = [...allBfData].sort((a, b) => {
+    const dateA = new Date(a.created_at || 0);
+    const dateB = new Date(b.created_at || 0);
+    return dateB - dateA;
+  }).slice(0, 14);
   
   const bfEl = document.getElementById("dashboardBF");
   if (bfData && bfData.length > 0) {
     const latest = bfData[0];
-    const checks = [];
-    if (latest.gym) checks.push("Gym");
-    if (latest.cal_track) checks.push("Cal");
-    if (latest.protein_only) checks.push("Protein");
-    if (latest.home_dumbbell) checks.push("Dumbbell");
     bfEl.innerHTML = `
       <div class="text-gray-600">Latest: ${latest.date}</div>
-      <div class="font-semibold text-pink-600">Score: ${latest.score?.toFixed(3) || 0}</div>
-      <div class="text-gray-500">Cal: ${latest.calories} | Prot: ${latest.protein}g</div>
-      ${checks.length > 0 ? `<div class="text-gray-500 text-xs">${checks.join(", ")}</div>` : ''}
+      <div class="font-semibold text-pink-600">Cal: ${latest.calories} | Prot: ${latest.protein}g</div>
     `;
     
     // Create/update chart
@@ -977,12 +384,8 @@ async function loadDashboard() {
   }
 }
 
-// Load editor and dashboard on page load
-loadTableEditor();
+// Load dashboard on page load
 loadDashboard();
-
-// Refresh dashboard every 10 seconds
-setInterval(loadDashboard, 10000);
 (()=>{
   const scene = new THREE.Scene();
   const cam = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
