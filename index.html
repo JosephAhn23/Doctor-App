@@ -31,8 +31,7 @@
   <!-- TITLE AND IMAGE -->
   <div class="text-center mb-8">
     <h1 class="text-6xl font-bold mb-4">TFR</h1>
-    <img id="topImage" src="TFR.png" alt="Rank (Low → High Obesity) - Lifestyle Patterns and Obesity Rates" class="mx-auto max-w-2xl rounded-lg shadow-lg mb-4">
-    <img id="secondImage" src="calorie-density-ranking.png" alt="Calorie Density Ranking (High → Low)" class="mx-auto max-w-2xl rounded-lg shadow-lg">
+    <img id="topImage" src="TFR.png" alt="Rank (Low → High Obesity) - Lifestyle Patterns and Obesity Rates" class="mx-auto max-w-2xl rounded-lg shadow-lg">
   </div>
   
   <!-- MAIN CONTENT: Apps -->
@@ -88,20 +87,6 @@
     </div>
   </div>
   
-  <!-- ================= FASTING TIMER ================= -->
-  <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4">
-    <h1 class="text-xl font-bold text-center">Fasting Timer</h1>
-
-    <div id="fastTimer" class="text-center text-3xl font-mono">00:00:00</div>
-
-    <div class="flex gap-2">
-      <button id="fastStart" class="flex-1 bg-emerald-600 text-white py-2 rounded">START</button>
-      <button id="fastStop" class="flex-1 border py-2 rounded">STOP</button>
-    </div>
-
-    <div id="fastStatus" class="text-center text-sm text-green-600"></div>
-  </div>
-
   <!-- ================= CALORIES & PROTEIN TRACKING ================= -->
   <div class="w-full max-w-md bg-white p-6 rounded-xl shadow space-y-4 mt-4">
     <h2 class="text-lg font-bold text-center text-indigo-600 mb-2">after 66 days of Tracking (HABITIFY) before going gym</h2>
@@ -111,9 +96,9 @@
     </div>
 
     <div class="flex items-start gap-2 p-2 bg-gray-50 rounded border border-gray-200">
-      <input id="noRiceMeat" type="checkbox" class="mt-1">
-      <label for="noRiceMeat" class="text-xs text-gray-700 cursor-pointer">
-        <span class="font-medium">no High Cal Density (Chocolate, Cookies, and Chips)</span>
+      <input id="trackedCalories" type="checkbox" class="mt-1">
+      <label for="trackedCalories" class="text-xs text-gray-700 cursor-pointer">
+        <span class="font-medium">tracked all calories before eating</span>
       </label>
     </div>
 
@@ -145,17 +130,6 @@
       <h2 class="text-lg font-bold mb-4 text-center">Dashboard</h2>
       
       <div class="flex flex-col gap-6">
-        <!-- Fasting Timer Stats -->
-        <div>
-          <h3 class="text-sm font-semibold text-gray-700 mb-2">Fasting Timer</h3>
-          <div id="dashboardSaaS" class="text-xs space-y-1 mb-2">
-            <div class="text-gray-500">Loading...</div>
-          </div>
-          <div style="height: 150px; position: relative;">
-            <canvas id="chartSaaS"></canvas>
-          </div>
-        </div>
-        
         <!-- Calories & Protein Stats -->
         <div>
           <h3 class="text-sm font-semibold text-gray-700 mb-2">Calories & Protein</h3>
@@ -174,14 +148,9 @@
 
 
 <script>
-/* ===== HELPERS ===== */
-const pad = n => String(n).padStart(2,"0");
-const fmt = s => `${pad(s/3600|0)}:${pad(s%3600/60|0)}:${pad(s%60)}`;
-
 /* ===== LOCALSTORAGE UTILITIES ===== */
 const STORAGE_KEYS = {
-  doctor_logs: 'tfr_doctor_logs',
-  saas_timer_logs: 'tfr_saas_timer_logs'
+  doctor_logs: 'tfr_doctor_logs'
 };
 
 // Load data from localStorage
@@ -282,50 +251,6 @@ document.getElementById("toggleChatbot").onclick = () => {
   }
 };
 
-/* ===== FASTING TIMER ===== */
-let fStart = null, fInt = null;
-
-document.getElementById("fastStart").onclick = () => {
-  if (fInt) return;
-  fStart = Date.now();
-  const fastTimer = document.getElementById("fastTimer");
-  fInt = setInterval(() => {
-    fastTimer.textContent = fmt((Date.now() - fStart) / 1000 | 0);
-  }, 1000);
-};
-
-document.getElementById("fastStop").onclick = async () => {
-  if (!fStart) {
-    const fastStatus = document.getElementById("fastStatus");
-    fastStatus.textContent = "⚠️ Please start the timer first";
-    return;
-  }
-
-  clearInterval(fInt);
-  fInt = null;
-  const fastTimer = document.getElementById("fastTimer");
-  const fastStatus = document.getElementById("fastStatus");
-
-  const seconds = (Date.now() - fStart) / 1000 | 0;
-  fStart = null; // Reset after getting the value
-
-  try {
-    const entry = {
-      date: new Date().toISOString().slice(0,10),
-      seconds: seconds
-    };
-    
-    addToStorage(STORAGE_KEYS.saas_timer_logs, entry);
-    fastStatus.textContent = `Saved ${seconds}s ✅`;
-    loadDashboard(); // Refresh dashboard
-  } catch (err) {
-    fastStatus.textContent = "❌ Error: " + err.message;
-    console.error("Fasting Timer save error:", err);
-  }
-
-  fastTimer.textContent = "00:00:00";
-};
-
 /* ===== BMR CALCULATOR ===== */
 document.getElementById("bmrCalculate").onclick = () => {
   const age = parseFloat(document.getElementById("bmrAge").value) || 20;
@@ -358,57 +283,9 @@ document.getElementById("bmrCalculate").onclick = () => {
 };
 
 /* ===== DASHBOARD ===== */
-let chartSaaS = null, chartBF = null;
+let chartBF = null;
 
 function loadDashboard() {
-  // Load Fasting Timer data (last 14 days)
-  const allData = loadFromStorage(STORAGE_KEYS.saas_timer_logs);
-  const saasData = [...allData].sort((a, b) => {
-    const dateA = new Date(a.created_at || 0);
-    const dateB = new Date(b.created_at || 0);
-    return dateB - dateA;
-  }).slice(0, 14);
-  
-  const saasEl = document.getElementById("dashboardSaaS");
-  if (saasData && saasData.length > 0) {
-    const latest = saasData[0];
-    const hours = (latest.seconds / 3600).toFixed(2);
-    saasEl.innerHTML = `
-      <div class="text-gray-600">Latest: ${latest.date}</div>
-      <div class="font-semibold text-emerald-600">${hours}h (${latest.seconds}s)</div>
-    `;
-    
-    // Create/update chart
-    const ctx = document.getElementById("chartSaaS").getContext("2d");
-    const sorted = [...saasData].reverse();
-    if (chartSaaS) chartSaaS.destroy();
-    chartSaaS = new Chart(ctx, {
-      type: "line",
-      data: {
-        labels: sorted.map(d => new Date(d.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })),
-        datasets: [{
-          label: "Hours",
-          data: sorted.map(d => (d.seconds / 3600).toFixed(2)),
-          borderColor: "rgb(16, 185, 129)",
-          backgroundColor: "rgba(16, 185, 129, 0.1)",
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, ticks: { font: { size: 9 } } },
-          x: { ticks: { font: { size: 8 }, maxRotation: 45 } }
-        }
-      }
-    });
-  } else {
-    saasEl.innerHTML = '<div class="text-gray-400">No data yet</div>';
-  }
-  
   // Load Calories & Protein data (last 14 days)
   const allBfData = loadFromStorage(STORAGE_KEYS.doctor_logs);
   const bfData = [...allBfData].sort((a, b) => {
